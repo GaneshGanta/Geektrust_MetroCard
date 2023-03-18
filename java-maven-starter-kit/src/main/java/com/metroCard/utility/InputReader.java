@@ -17,7 +17,6 @@ public class InputReader {
 	
 	public InputReader() {
 		
-		// TODO Auto-generated constructor stub
 	}
 
 	public InputReader(String filePath) {
@@ -33,6 +32,13 @@ public class InputReader {
 		this.filePath = filePath;
 	}
 	
+	public List<Balance> getBalanceList(){
+		return this.balanceList;
+	}
+	
+	public List<CheckIn> getCheckInList(){
+		return this.checkInList;
+	}
 	
 	
 	public  void takeInput() {
@@ -74,7 +80,6 @@ public class InputReader {
 			
 			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			System.out.println(e.getMessage());
 		}
 		
@@ -82,13 +87,7 @@ public class InputReader {
 	}
 	
 	
-	public List<Balance> getBalanceList(){
-		return this.balanceList;
-	}
 	
-	public List<CheckIn> getCheckInList(){
-		return this.checkInList;
-	}
 	
 	
 	
