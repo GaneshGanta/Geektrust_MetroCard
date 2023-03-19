@@ -7,19 +7,20 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.metroCard.model.Balance;
-import com.metroCard.model.CheckIn;
+import com.metroCard.model.Check;
 
-public class InputReader {
+public class Input {
+	
 	private String filePath;
 	
-	List<Balance> balanceList = new ArrayList<>();
-	List<CheckIn> checkInList = new ArrayList<>();
+	List<Balance> listOfBalance = new ArrayList<>();
+	List<Check> listOfCheckIn = new ArrayList<>();
 	
-	public InputReader() {
+	public Input() {
 		
 	}
 
-	public InputReader(String filePath) {
+	public Input(String filePath) {
 		super();
 		this.filePath = filePath;
 	}
@@ -33,11 +34,11 @@ public class InputReader {
 	}
 	
 	public List<Balance> getBalanceList(){
-		return this.balanceList;
+		return this.listOfBalance;
 	}
 	
-	public List<CheckIn> getCheckInList(){
-		return this.checkInList;
+	public List<Check> getCheckInList(){
+		return this.listOfCheckIn;
 	}
 	
 	
@@ -65,12 +66,13 @@ public class InputReader {
 				
 				//Actual Input Taking
 				String[] inputArray = inputLine.split(" ");
+				
 				if(inputArray[0].equals("BALANCE")) {
 					Balance obj = new Balance(inputArray[1], Integer.parseInt(inputArray[2]));
-					balanceList.add(obj);
-				}else {
-					CheckIn obj = new CheckIn(inputArray[1], inputArray[2], inputArray[3]);
-					checkInList.add(obj);
+					listOfBalance.add(obj);
+				}else if(inputArray[0].equals("CHECK_IN")) {
+					Check obj = new Check(inputArray[1], inputArray[2], inputArray[3]);
+					listOfCheckIn.add(obj);
 				}
 				
 				
@@ -78,17 +80,13 @@ public class InputReader {
 			
 			sc.close();
 			
-			
+			//throws an exception when file path is not found...
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
 		
 		
 	}
-	
-	
-	
-	
 	
 	
 	

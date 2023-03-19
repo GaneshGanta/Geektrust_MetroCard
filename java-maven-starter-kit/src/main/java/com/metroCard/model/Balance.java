@@ -2,70 +2,57 @@ package com.metroCard.model;
 
 public class Balance {
 	
-	private String metroCard;
+	private String metroCardNo;
 	private Integer cardBalance;
 	private Integer count;
 	
 	
-	
+	public String getMetroCardNo() {
+		return metroCardNo;
+	}
+
+	public void setMetroCardNo(String metroCardNo) {
+		this.metroCardNo = metroCardNo;
+	}
+
+	public Integer getCardBalance() {
+		return cardBalance;
+	}
+
+	public void setCardBalance(Integer cardBalance) {
+		this.cardBalance = cardBalance;
+	}
+
 	public Integer getCount() {
 		return count;
 	}
-
 
 	public void setCount(Integer count) {
 		this.count = count;
 	}
 
+	public Balance() {
+		
+	}
 
 	public Balance(String metroCard, Integer cardBalance, Integer count) {
 		super();
-		this.metroCard = metroCard;
+		this.metroCardNo = metroCard;
 		this.cardBalance = cardBalance;
 		this.count = count;
 	}
-
-
-	public Balance() {
-		
-		// TODO Auto-generated constructor stub
-	}
-
-
+	
 	public Balance(String metroCard, Integer cardBalance) {
 		super();
-		this.metroCard = metroCard;
+		this.metroCardNo = metroCard;
 		this.cardBalance = cardBalance;
 		this.count =0 ;
 	}
 
-
-	public String getMetroCard() {
-		return metroCard;
-	}
-
-
-	public void setMetroCard(String metroCard) {
-		this.metroCard = metroCard;
-	}
-
-
-	public Integer getBalance() {
-		return cardBalance;
-	}
-
-
-	public void setBalance(Integer balance) {
-		this.cardBalance = balance;
-	}
-
-
 	@Override
 	public String toString() {
-		return "Balance [metroCard=" + metroCard + ", cardBalance=" + cardBalance + ", count=" + count + "]";
+		return "Balance [metroCardNo=" + metroCardNo + ", cardBalance=" + cardBalance + ", count=" + count + "]";
 	}
-
-
 	
 	
 

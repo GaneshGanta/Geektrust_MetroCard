@@ -7,98 +7,98 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.metroCard.exception.BalanceException;
+import com.metroCard.exception.InSufficientBalanceException;
 import com.metroCard.model.Balance;
-import com.metroCard.model.CheckIn;
-import com.metroCard.model.StationDetails;
+import com.metroCard.model.Check;
+import com.metroCard.model.Stations;
 
-public class MetroSummaryServiceImpl implements MetroSummaryService {
+public class MetroCardServiceImpl implements MetroCardService {
 	
+	private static Integer seniorCitizenCharge=100;
+	private static Integer adultCharge=200;
+	private static Integer kidCharge=50;
+	private static Integer serviceCharge=2;
+
 	
-	List<Balance> balList;
-	List<CheckIn> checkList;
-	List<StationDetails> stationList = new ArrayList<>();
-	
-	
-	
-	public MetroSummaryServiceImpl(List<Balance> balList, List<CheckIn> checkList) {
-		super();
-		this.balList = balList;
-		this.checkList = checkList;
-		this.stationList.add(new StationDetails("CENTRAL"));
-		this.stationList.add(new StationDetails("AIRPORT"));
-	}
+	private List<Balance> listOfBalance;
+	private List<Check> listOfCheck;
+	private List<Stations> stationList = new ArrayList<>();
 	
 	
 	
-	public List<StationDetails> method1() throws BalanceException {
+	//transforming the raw data of passengers into stastistical data.
+	public List<Stations> stats() throws InSufficientBalanceException {
 		
-		for(int i=0;i< this.checkList.size();i++) {
+		for(int i=0;i< this.listOfCheck.size();i++) {
 			
-			CheckIn obj = checkList.get(i);
+			Check obj = listOfCheck.get(i);
 			
-			String cardNum = obj.getMetroCard();
+			String cardNum = obj.getMetroCardNo();
 			
+			//getting index of card if present...
+			Integer cardStatus = index(cardNum);
 			
-			Integer balanceIndex = getBalanceIndex(cardNum);
-			
-			if(balanceIndex==null) {
-				throw new BalanceException("Card Not Found");
+			if(cardStatus==null) {
+				throw new InSufficientBalanceException("Card Not Found");
 			}
 			
-			Integer currBal = balList.get(balanceIndex).getBalance();
+			Integer currentBalance = listOfBalance.get(cardStatus).getCardBalance();
 			
 			
-			if(obj.getPassengerType().equals("ADULT")) {
-				processTicket(balanceIndex, currBal, 200, obj.getFromStation(), "ADULT");
+			if(obj.getTypeOfPassenger().equals("ADULT")) {
 				
-			}else if(obj.getPassengerType().equals("SENIOR_CITIZEN")) {
-				processTicket(balanceIndex, currBal, 100, obj.getFromStation(),"SENIOR_CITIZEN");
+				book(cardStatus, currentBalance, adultCharge, obj.getStationName(), "ADULT");
 				
-			}else if(obj.getPassengerType().equals("KID")) {
+			}else if(obj.getTypeOfPassenger().equals("SENIOR_CITIZEN")) {
 				
-				processTicket(balanceIndex, currBal, 50, obj.getFromStation(), "KID");
+				book(cardStatus, currentBalance, seniorCitizenCharge, obj.getStationName(),"SENIOR_CITIZEN");
+				
+			}else if(obj.getTypeOfPassenger().equals("KID")) {
+				book(cardStatus, currentBalance, kidCharge, obj.getStationName(), "KID");
+				
 			}
-			
-			
-			
+						
 			
 		}
+		
 		return stationList;
 		
 	}
 	
-	public void processTicket(Integer indexNum, Integer currBal, Integer ticketPrice, String station, String type) {
+	
+	//booking the ticket to travel
+	public void book(Integer indexNum, Integer currentBalance, Integer ticketPrice, String station, String type) { 
 		
 		//increasing passenger count
-		balList.get(indexNum).setCount(balList.get(indexNum).getCount()+1);
-		int count = balList.get(indexNum).getCount();
+		listOfBalance.get(indexNum).setCount(listOfBalance.get(indexNum).getCount()+1);
+		
+		int count = listOfBalance.get(indexNum).getCount();
 		int discount = 0;
 		
-		if(currBal<ticketPrice) {
+		if(currentBalance<ticketPrice) {
 			
-			if(count%2==0) {
+			if(count%serviceCharge==0) {
 				ticketPrice = ticketPrice/2;
 				discount = ticketPrice;
 			}
-			balList.get(indexNum).setBalance(0);
+			listOfBalance.get(indexNum).setCardBalance(0);
 			
-			Integer requiredBal = ticketPrice - currBal;
+			Integer requiredBalance = ticketPrice - currentBalance;
 			
-			Integer charge = (requiredBal * 2)/100;
+			Integer charge = (requiredBalance * serviceCharge)/100;
 			
-			updateStation(station, ticketPrice+charge , type, discount );
+			update(station, ticketPrice+charge , type, discount );
 			
 			
 		}else {
 			
-			if(count%2==0) {
-				ticketPrice = ticketPrice/2;
+			if(count%serviceCharge==0) {
+				ticketPrice = ticketPrice/serviceCharge;
 				discount = ticketPrice;
 			}
 			
-			balList.get(indexNum).setBalance(currBal-ticketPrice);
-			updateStation(station, ticketPrice , type ,discount);
+			listOfBalance.get(indexNum).setCardBalance(currentBalance-ticketPrice);
+			update(station, ticketPrice , type ,discount);
 		}
 		
 		
@@ -106,9 +106,9 @@ public class MetroSummaryServiceImpl implements MetroSummaryService {
 	}
 	
 	
-	public void updateStation(String station, Integer amount, String type,Integer discount) {
+	public void update(String station, Integer amount, String type,Integer discount) {
 		
-		StationDetails obj;
+		Stations obj;
 		
 		if(station.equals("CENTRAL")) {
 			obj = stationList.get(0);
@@ -124,7 +124,7 @@ public class MetroSummaryServiceImpl implements MetroSummaryService {
 			obj.setAdultCount(obj.getAdultCount()+1);
 		}else if(type.equals("SENIOR_CITIZEN")) {
 			obj.setSeniorCount(obj.getSeniorCount()+1);
-		}else {
+		}else if(type.equals("KID")){
 			obj.setKidCount(obj.getKidCount()+1);
 		}
 		
@@ -147,35 +147,44 @@ public class MetroSummaryServiceImpl implements MetroSummaryService {
 	}
 	
 	
-	public  Integer getBalanceIndex(String card) {
-		Integer index = null;
-		for(int i=0;i<balList.size();i++) {
-			if(balList.get(i).getMetroCard().equals(card)) {
-				index=i;
+	//returning the index of the metroCard list if found...
+	public  Integer index(String card) {
+		
+		Integer in = null;
+		
+		for(int i=0;i<listOfBalance.size();i++) {
+			if(listOfBalance.get(i).getMetroCardNo().equals(card)) {
+				in=i;
 				break;
 			}
 		}
 		
 		
-		return index;
+		return in;
 		
 	}
 	
 	
-	
+	//getting the balance in the metroCard of the passenger
 	public Integer getBalance(Integer index) {
-		return balList.get(index).getBalance();
+		return listOfBalance.get(index).getCardBalance();
 	}
 	
-	//final summary of the metroCard
-	public void console() throws BalanceException {
+	
+	
+	//final summary of the metroCard project
+	public String console() throws InSufficientBalanceException {
 		
-		List<StationDetails> output= method1();
+		List<Stations> output= stats();
+		
+		String ans =" ";
 		
 		System.out.println("TOTAL_COLLECTION "+ "CENTRAL "+output.get(0).getTotalCollection()+" "+output.get(0).getTotalDiscount());
-    	
+		ans += "TOTAL_COLLECTION "+ "CENTRAL "+output.get(0).getTotalCollection()+" "+output.get(0).getTotalDiscount()+"\n";
+
     	
     	Map<String,Integer> centralMap = new LinkedHashMap();
+    	
     	centralMap.put("ADULT",output.get(0).getAdultCount());
     	centralMap.put("KID",output.get(0).getKidCount());
     	centralMap.put("SENIOR_CITIZEN",output.get(0).getSeniorCount());
@@ -197,19 +206,28 @@ public class MetroSummaryServiceImpl implements MetroSummaryService {
 
     	
     	System.out.println("PASSENGER_TYPE_SUMMARY");
+    	ans+="PASSENGER_TYPE_SUMMARY\n";
+    	
     	if(list.get(0).getValue()!=0) {
     		System.out.println(list.get(0).getKey()+" "+list.get(0).getValue());
+    		ans+=list.get(0).getKey()+" "+list.get(1).getValue()+"\n";
+
     	}
     	if(list.get(1).getValue()!=0) {
     		System.out.println(list.get(1).getKey()+" "+list.get(1).getValue());
+    		ans+=list.get(1).getKey()+" "+list.get(1).getValue()+"\n";
+
     	}
     	if(list.get(2).getValue()!=0) {
     		System.out.println(list.get(2).getKey()+" "+list.get(2).getValue());
+    		ans+=list.get(2).getKey()+" "+list.get(1).getValue()+"\n";
+
     	}
     	
     	
     	System.out.println("TOTAL_COLLECTION "+ "AIRPORT "+output.get(1).getTotalCollection()+" "+output.get(1).getTotalDiscount());
-    	
+    	ans += "TOTAL_COLLECTION "+ "AIRPORT "+output.get(1).getTotalCollection()+" "+output.get(1).getTotalDiscount()+"\n";
+
     	
     	Map<String,Integer> airportMap = new LinkedHashMap();
     	airportMap.put("ADULT",output.get(1).getAdultCount());
@@ -233,19 +251,34 @@ public class MetroSummaryServiceImpl implements MetroSummaryService {
 
     	
     	System.out.println("PASSENGER_TYPE_SUMMARY");
+    	ans+="PASSENGER_TYPE_SUMMARY\n";
+    	
     	if(list2.get(0).getValue()!=0) {
     		System.out.println(list2.get(0).getKey()+" "+list2.get(0).getValue());
+    		ans+=list2.get(0).getKey()+" "+list2.get(0).getValue()+"\n";
+
     	}
     	if(list2.get(1).getValue()!=0) {
     		System.out.println(list2.get(1).getKey()+" "+list2.get(1).getValue());
+    		ans+=list2.get(1).getKey()+" "+list2.get(0).getValue()+"\n";
+
     	}
     	if(list2.get(2).getValue()!=0) {
     		System.out.println(list2.get(2).getKey()+" "+list2.get(2).getValue());
+    		ans+=list2.get(1).getKey()+" "+list2.get(0).getValue()+"\n";
+
     	}
-		
-		
-		
-		
+				
+		return ans;
+	}
+	
+	
+	public MetroCardServiceImpl(List<Balance> balList, List<Check> checkList) {
+		super();
+		this.listOfBalance = balList;
+		this.listOfCheck = checkList;
+		this.stationList.add(new Stations("CENTRAL"));
+		this.stationList.add(new Stations("AIRPORT"));
 	}
 
 }

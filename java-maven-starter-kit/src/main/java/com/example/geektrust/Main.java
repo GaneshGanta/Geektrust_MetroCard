@@ -1,45 +1,43 @@
 package com.example.geektrust;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import com.metroCard.exception.BalanceException;
-import com.metroCard.model.StationDetails;
-import com.metroCard.service.MetroSummaryServiceImpl;
-import com.metroCard.utility.InputReader;
+import com.metroCard.exception.InSufficientBalanceException;
+import com.metroCard.service.MetroCardServiceImpl;
+import com.metroCard.utility.Input;
 
 public class Main {
-    public static void main(String[] args) throws BalanceException {
+    public static void main(String[] args) throws InSufficientBalanceException {
         
-        //Sample code to read from file passed as command line argument
         try {
             // the file to be opened for reading
         	if(args.length==0) {
-        		throw new IOException("File Path is not Provided in the command line argument!!");
+        		
+        		throw new IOException("File Path is not provided in the command line argument!");
         	}
         	String filePath = args[0];
-        	createSummary(filePath);
+        	
+        	summary(filePath);
         	
         } catch (IOException e) {
+        	
         	e.printStackTrace();
+        	
         }
         
     }
     
-    public static void createSummary(String filePath) throws BalanceException {
+    public static String summary(String filePath) throws InSufficientBalanceException {
     	
-    	InputReader ir = new InputReader(filePath);
+    	//sending the file path to Input class to read the input file...
+    	Input ir = new Input(filePath);
     	ir.takeInput();
+    	    	
+    	MetroCardServiceImpl process = new MetroCardServiceImpl(ir.getBalanceList(), ir.getCheckInList());
     	
-    	MetroSummaryServiceImpl process = new MetroSummaryServiceImpl(ir.getBalanceList(), ir.getCheckInList());
-    	process.console();
+    	//printing the summary of the passengers...
+    	String output = process.console();
     	
-    	
+    	return output;
     	
     	
     }
