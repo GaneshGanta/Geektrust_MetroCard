@@ -82,7 +82,9 @@ public class Input {
 			
 			//throws an exception when file path is not found...
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			
+			System.out.println(e.getMessage());
+
 		}
 		
 		
